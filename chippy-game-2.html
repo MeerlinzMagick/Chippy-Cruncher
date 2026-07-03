@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chippy Cruncher</title>
+<style>
+body{ margin:0; min-height:100vh; background:linear-gradient(#1b1b1b,#333); color:white; font-family:Arial, sans-serif; text-align:center; }
+h1{ margin-top:30px; }
+#chips{ font-size:32px; }
+#chip{ width:220px; height:140px; margin:40px auto; background:radial-gradient(circle at 30% 30%, #ffd97a, #d89020); border-radius:50%; filter:url(#soft-chip-texture); clip-path:ellipse(50% 50%); box-shadow:inset -10px -10px 20px #9b5c00, inset 10px 10px 20px #ffe8a8, 0 10px 30px black; cursor:pointer; position:relative; transition:0.1s; }
+#chip:active{ transform:scale(0.92); }
+.eye{ width:25px; height:25px; background:black; border-radius:50%; position:absolute; top:45px; }
+.leftEye{ left:65px; }
+.rightEye{ right:65px; }
+.smile{ width:60px; height:25px; border-bottom:6px solid black; border-radius:50%; position:absolute; bottom:35px; left:80px; }
+.panel{ background:#222; width:350px; margin:20px auto; padding:20px; border-radius:15px; box-shadow:0 0 15px black; }
+button{ width:90%; padding:10px; margin:5px; border-radius:10px; border:none; cursor:pointer; font-size:16px; }
+</style>
+</head>
+<body>
+<svg style="position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true">
+<filter id="soft-chip-texture" x="0%" y="0%" width="100%" height="100%">
+<feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="4" seed="8" result="noise"/>
+<feDiffuseLighting in="noise" lighting-color="#bfbfbf" surfaceScale="5" diffuseConstant="1.2" result="light">
+<feDistantLight azimuth="45" elevation="60"/>
+</feDiffuseLighting>
+<feComposite in="light" in2="SourceGraphic" operator="in" result="maskedLight"/>
+<feBlend in="SourceGraphic" in2="maskedLight" mode="soft-light"/>
+</filter>
+</svg>
+<h1>🥔 Chippy Cruncher CCCC</h1>
+<h2 id="chips">0 Chips</h2>
+<h3 id="evoName">Plain Chippy</h3>
+<div id="chip">
+    <div class="eye leftEye"></div>
+    <div class="eye rightEye"></div>
+    <div class="smile"></div>
+</div>
+<div class="panel">
+<h2>Upgrades</h2>
+<div id="shop">
+<button>Finger Workout<br>+1 Click Power<br>Cost: 25</button>
+<button>Potato Farm<br>+2 Chips Per Second<br>Cost: 100</button>
+</div>
+</div>
+<div class="panel">
+<h2>Stats</h2>
+<p id="clickPower">Click Power: 1</p>
+<p id="passivePower">Passive Power: 0</p>
+<p id="multiplier">Multiplier: x1</p>
+</div>
+<div class="panel">
+<h2>🏆 Achievements</h2>
+<div id="achievements"></div>
+</div>
+<script>
+let chips = 0;
+let clickPower = 1;
+let passivePower = 0;
+let multiplier = 1;
+let totalChips = 0;
+let currentWorld = "Kitchen";
+let prestigeLevel = 0;
+let prestigeMultiplier = 1;
+let seasoningActive = false;
+let seasoningMultiplier = 1;
+let seasoningTime = 0;
+let goldenCrunchActive = false;
+let goldenCrunchMultiplier = 1;
+let fingerWorkoutCost = 25;
+let potatoFarmCost = 100;
+
+let evolution = { name:"Plain Chippy", level:0 };
+const evolutions = [
+    { name:"Plain Chippy", requirement:0 },
+    { name:"Golden Chippy", requirement:1000 },
+    { name:"Mega Chippy", requirement:10000 },
+    { name:"Cosmic Chippy", requirement:100000 },
+    { name:"Ultimate Chippy", requirement:1000000 }
+];
+
+const achievements = [
+    { name:"First Crunch", description:"Earn 1 chip", unlocked:false },
+    { name:"Chip Collector", description:"Earn 10,000 chips", unlocked:false },
+    { name:"Crunch Legend", description:"Earn 1,000,000 chips", unlocked:false }
+];
+
+let worlds = [
+    { name:"Kitchen", multiplier:1, unlocked:true },
+    { name:"Potato Farm", multiplier:2, unlocked:false },
+    { name:"Flavor Factory", multiplier:4, unlocked:false },
+    { name:"Seasoning Lab", multiplier:8, unlocked:false },
+    { name:"Golden Crunch Realm", multiplier:16, unlocked:false },
+    { name:"Crystal Caverns", multiplier:32, unlocked:false },
+    { name:"Volcanic Oven", multiplier:64, unlocked:false },
+    { name:"Frozen Pantry", multiplier:128, unlocked:false },
+    { name:"Quantum Kitchen", multiplier:256, unlocked:false },
+    { name:"Nebula Fields", multiplier:512, unlocked:false },
+    { name:"Black Hole Bakery", multiplier:1024, unlocked:false },
+    { name:"Gluon Dimension", multiplier:2048, unlocked:false },
+    { name:"White Hole Realm", multiplier:4096, unlocked:false },
+    { name:"Cosmic Void", multiplier:8192, unlocked:false }
+];
+
+const worldBackgrounds = {
+    "Kitchen": "linear-gradient(#ffe9b5,#ffcc66)",
+    "Potato Farm": "linear-gradient(#8ecf5f,#5d8f34)",
+    "Flavor Factory": "linear-gradient(#9c6bff,#5a2ea6)",
+    "Seasoning Lab": "linear-gradient(#4fc3f7,#01579b)",
+    "Golden Crunch Realm": "linear-gradient(#ffe066,#ffb300)",
+    "Crystal Caverns": "linear-gradient(#8ef6ff,#00bcd4)",
+    "Volcanic Oven": "linear-gradient(#ff7043,#b71c1c)",
+    "Frozen Pantry": "linear-gradient(#d9f4ff,#7ec8ff)",
+    "Quantum Kitchen": "linear-gradient(#9fa8ff,#3f51b5)",
+    "Nebula Fields": "linear-gradient(#7b5cff,#1a0b3d)",
+    "Black Hole Bakery": "linear-gradient(#111111,#000000)",
+    "Gluon Dimension": "linear-gradient(#ff00cc,#3333ff)",
+    "White Hole Realm": "linear-gradient(#ffffff,#d7f7ff)",
+    "Cosmic Void": "linear-gradient(#050510,#18183f)"
+};
+
+let skills = { clickBoost:0, passiveBoost:0, criticalChance:0 };
+let statistics = { totalClicks:0, totalChipsEarned:0, totalUpgradesBought:0, totalPrestiges:0, totalWorldChanges:0, totalGoldenCrunches:0, totalSeasoningsUsed:0, totalCriticalClicks:0 };
+let settings = { music:true, sound:true, particles:true, screenShake:true, autoSave:true, notifications:true, showFPS:false, darkMode:true };
+let audio = { click:null, upgrade:null, achievement:null, goldenCrunch:null, prestige:null, backgroundMusic:null };
+let chip = document.getElementById("chip");
+
+function clickChip(){
+    animateChip();
+    createChipParticle();
+    let before = chips;
+    let oldMultiplier = multiplier;
+    multiplier *= getWorldMultiplier();
+    multiplier *= seasoningMultiplier;
+    multiplier *= prestigeMultiplier;
+    checkGoldenCrunch();
+    multiplier *= goldenCrunchMultiplier;
+    let oldPower = clickPower;
+    if(Math.random() < skills.criticalChance){ clickPower *= 5; }
+    let gain = clickPower * multiplier;
+    chips += gain;
+    recordClick();
+    recordChipGain(gain);
+    playSound("click");
+    updateUI();
+    multiplier = oldMultiplier;
+    clickPower = oldPower;
+    let gained = chips - before;
+    totalChips += gained;
+    checkEvolution();
+    checkAchievements();
+    checkWorlds();
+}
+
+function passiveGain(){
+    let before = chips;
+    chips += passivePower * multiplier;
+    updateUI();
+    let gained = chips - before;
+    totalChips += gained;
+    checkEvolution();
+    checkAchievements();
+}
+
+function buyFingerWorkout(){
+    if(chips >= fingerWorkoutCost){
+        chips -= fingerWorkoutCost;
+        clickPower++;
+        fingerWorkoutCost = Math.floor(fingerWorkoutCost * 1.5);
+        playSound("upgrade");
+        updateUI();
+    }
+}
+
+function buyPotatoFarm(){
+    if(chips >= potatoFarmCost){
+        chips -= potatoFarmCost;
+        passivePower += 2;
+        potatoFarmCost = Math.floor(potatoFarmCost * 1.5);
+        playSound("upgrade");
+        updateUI();
+    }
+}
+
+document.getElementById("chip").onclick = clickChip;
+let buttons = document.querySelectorAll("#shop button");
+buttons[0].onclick = buyFingerWorkout;
+buttons[1].onclick = buyPotatoFarm;
+
+function updateUI(){
+    updateWorldBackground();
+    document.getElementById("chips").innerText = Math.floor(chips) + " Chips";
+    document.getElementById("clickPower").innerText = "Click Power: " + clickPower;
+    document.getElementById("passivePower").innerText = "Passive Power: " + passivePower;
+    document.getElementById("multiplier").innerText = "Multiplier: x" + multiplier;
+    updateShop();
+}
+
+function updateShop(){
+    let shopButtons = document.querySelectorAll("#shop button");
+    shopButtons[0].innerHTML = `Finger Workout<br>+1 Click Power<br>Cost: ${fingerWorkoutCost}`;
+    shopButtons[1].innerHTML = `Potato Farm<br>+2 Chips Per Second<br>Cost: ${potatoFarmCost}`;
+}
+
+setInterval(passiveGain,1000);
+updateUI();
+
+function saveGame(){
+    let saveData = { chips: chips, clickPower: clickPower, passivePower: passivePower, multiplier: multiplier, fingerWorkoutCost: fingerWorkoutCost, potatoFarmCost: potatoFarmCost, settings: settings };
+    localStorage.setItem("CCCC_Save", JSON.stringify(saveData));
+}
+
+function loadGame(){
+    let save = localStorage.getItem("CCCC_Save");
+    if(save){
+        let data = JSON.parse(save);
+        chips = data.chips || 0;
+        clickPower = data.clickPower || 1;
+        passivePower = data.passivePower || 0;
+        multiplier = data.multiplier || 1;
+        fingerWorkoutCost = data.fingerWorkoutCost || 25;
+        potatoFarmCost = data.potatoFarmCost || 100;
+        if(data.settings){ settings = data.settings; }
+    }
+}
+
+loadGame();
+updateUI();
+setInterval(saveGame,10000);
+
+function checkEvolution(){
+    for(let i=evolutions.length-1; i>=0; i--){
+        if(totalChips >= evolutions[i].requirement){
+            evolution = evolutions[i];
+            document.getElementById("evoName").innerText = evolution.name;
+            break;
+        }
+    }
+}
+
+function checkAchievements(){
+    if(totalChips >= 1) achievements[0].unlocked=true;
+    if(totalChips >= 10000) achievements[1].unlocked=true;
+    if(totalChips >= 1000000) achievements[2].unlocked=true;
+    renderAchievements();
+}
+
+function renderAchievements(){
+    let area = document.getElementById("achievements");
+    area.innerHTML="";
+    achievements.forEach(a=>{
+        area.innerHTML += `${a.unlocked ? "🏆" : "🔒"} ${a.name} - ${a.description}<br>`;
+    });
+}
+
+function checkWorlds(){
+    if(totalChips >= 1000) worlds[1].unlocked = true;
+    if(totalChips >= 10000) worlds[2].unlocked = true;
+    if(totalChips >= 100000) worlds[3].unlocked = true;
+    if(totalChips >= 1000000) worlds[4].unlocked = true;
+}
+
+function getWorldMultiplier(){
+    let world = worlds.find(w => w.name === currentWorld);
+    return world.multiplier;
+}
+
+function renderWorlds(){
+    let worldArea = document.createElement("div");
+    worldArea.className = "panel";
+    worldArea.innerHTML = "<h2>🌎 Worlds</h2>";
+    worlds.forEach((world,index)=>{
+        let button = document.createElement("button");
+        button.innerHTML = world.name + "<br>x" + world.multiplier;
+        button.onclick=function(){
+            if(world.unlocked){ currentWorld = world.name; updateUI(); }
+        };
+        worldArea.appendChild(button);
+    });
+    document.body.appendChild(worldArea);
+}
+
+function checkWorldUnlocks(){
+    worlds.forEach((world,index)=>{
+        if(totalChips >= Math.pow(10,index+3)) world.unlocked=true;
+    });
+}
+
+function updateWorldBackground(){
+    document.body.style.background = worldBackgrounds[currentWorld];
+}
+
+function useSeasoning(){
+    if(!seasoningActive){
+        seasoningActive = true;
+        seasoningMultiplier = 2;
+        seasoningTime = 30;
+    }
+}
+
+function seasoningLoop(){
+    if(seasoningActive){
+        seasoningTime--;
+        if(seasoningTime <= 0){
+            seasoningActive = false;
+            seasoningMultiplier = 1;
+        }
+    }
+}
+setInterval(seasoningLoop,1000);
+
+function startGoldenCrunch(){
+    goldenCrunchActive = true;
+    goldenCrunchMultiplier = 10;
+    setTimeout(function(){
+        goldenCrunchActive = false;
+        goldenCrunchMultiplier = 1;
+    },15000);
+}
+
+function checkGoldenCrunch(){
+    let chance = Math.random();
+    if(chance < 0.01) startGoldenCrunch();
+}
+
+function getPrestigeRequirement(){
+    return Math.floor(10000 * Math.pow(2.5, prestigeLevel));
+}
+
+function prestige(){
+    let requirement = getPrestigeRequirement();
+    if(totalChips >= requirement){
+        prestigeLevel++;
+        prestigeMultiplier += 0.5;
+        chips = 0;
+        clickPower = 1;
+        passivePower = 0;
+        updateUI();
+    }
+}
+
+function upgradeClickSkill(){
+    skills.clickBoost++;
+    clickPower += 2;
+    updateUI();
+}
+
+function upgradePassiveSkill(){
+    skills.passiveBoost++;
+    passivePower += 5;
+    updateUI();
+}
+
+function upgradeCriticalSkill(){
+    skills.criticalChance += 0.05;
+    updateUI();
+}
+
+function animateChip(){
+    chip.style.transform = "scale(0.92) rotate(" + (Math.random()*8-4) + "deg)";
+    setTimeout(function(){ chip.style.transform = ""; },100);
+}
+
+function createChipParticle(){
+    let particle = document.createElement("div");
+    particle.innerHTML="✨";
+    particle.style.position="fixed";
+    let rect = chip.getBoundingClientRect();
+    particle.style.left = (rect.left+rect.width/2)+"px";
+    particle.style.top = (rect.top+rect.height/2)+"px";
+    particle.style.fontSize="20px";
+    particle.style.pointerEvents="none";
+    particle.style.transition="all 0.8s linear";
+    document.body.appendChild(particle);
+    requestAnimationFrame(function(){
+        particle.style.transform = "translateY(-80px)";
+        particle.style.opacity="0";
+    });
+    setTimeout(function(){ particle.remove(); },800);
+}
+
+function recordClick(){ statistics.totalClicks++; }
+function recordChipGain(amount){ statistics.totalChipsEarned += amount; }
+function recordUpgrade(){ statistics.totalUpgradesBought++; }
+function recordPrestige(){ statistics.totalPrestiges++; }
+function recordWorldChange(){ statistics.totalWorldChanges++; }
+function recordGoldenCrunch(){ statistics.totalGoldenCrunches++; }
+function recordSeasoning(){ statistics.totalSeasoningsUsed++; }
+function recordCritical(){ statistics.totalCriticalClicks++; }
+
+function toggleSetting(setting){ settings[setting] = !settings[setting]; }
+function applySettings(){ if(!settings.particles) return; }
+
+function playSound(sound){
+    if(!settings.sound) return;
+    if(audio[sound]){ audio[sound].currentTime = 0; audio[sound].play(); }
+}
+
+function playMusic(){
+    if(!settings.music) return;
+    if(audio.backgroundMusic){ audio.backgroundMusic.loop = true; audio.backgroundMusic.play(); }
+}
+</script>
+</body>
+</html>
