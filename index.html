@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chippy Cruncher</title>
 <style>
-body{ margin:0; min-height:100vh; background:linear-gradient(#1b1b1b,#333); color:white; font-family:Arial, sans-serif; text-align:center; }
+body{ margin:0; min-height:100vh; background:linear-gradient(#050505,#111); color:white; font-family:Arial, sans-serif; text-align:center; }
 h1{ margin-top:30px; }
 #chips{ font-size:32px; }
 #chip{ width:220px; height:140px; margin:40px auto; background:radial-gradient(circle at 30% 30%, #ffd97a, #d89020); border-radius:50%; filter:url(#soft-chip-texture); clip-path:ellipse(50% 50%); box-shadow:inset -10px -10px 20px #9b5c00, inset 10px 10px 20px #ffe8a8, 0 10px 30px black; cursor:pointer; position:relative; transition:0.1s; }
@@ -104,20 +104,20 @@ let worlds = [
 ];
 
 const worldBackgrounds = {
-    "Kitchen": "linear-gradient(#ffe9b5,#ffcc66)",
-    "Potato Farm": "linear-gradient(#8ecf5f,#5d8f34)",
-    "Flavor Factory": "linear-gradient(#9c6bff,#5a2ea6)",
-    "Seasoning Lab": "linear-gradient(#4fc3f7,#01579b)",
-    "Golden Crunch Realm": "linear-gradient(#ffe066,#ffb300)",
-    "Crystal Caverns": "linear-gradient(#8ef6ff,#00bcd4)",
-    "Volcanic Oven": "linear-gradient(#ff7043,#b71c1c)",
-    "Frozen Pantry": "linear-gradient(#d9f4ff,#7ec8ff)",
-    "Quantum Kitchen": "linear-gradient(#9fa8ff,#3f51b5)",
-    "Nebula Fields": "linear-gradient(#7b5cff,#1a0b3d)",
-    "Black Hole Bakery": "linear-gradient(#111111,#000000)",
-    "Gluon Dimension": "linear-gradient(#ff00cc,#3333ff)",
-    "White Hole Realm": "linear-gradient(#ffffff,#d7f7ff)",
-    "Cosmic Void": "linear-gradient(#050510,#18183f)"
+    "Kitchen": "linear-gradient(#2a2015,#15100a)",
+    "Potato Farm": "linear-gradient(#1e3312,#0f1a09)",
+    "Flavor Factory": "linear-gradient(#2b1a4d,#160d26)",
+    "Seasoning Lab": "linear-gradient(#0a2a3b,#05151d)",
+    "Golden Crunch Realm": "linear-gradient(#4d3300,#261a00)",
+    "Crystal Caverns": "linear-gradient(#0a2a33,#05151a)",
+    "Volcanic Oven": "linear-gradient(#330f0a,#1a0805)",
+    "Frozen Pantry": "linear-gradient(#1a2a33,#0d151a)",
+    "Quantum Kitchen": "linear-gradient(#1a1e33,#0d0f1a)",
+    "Nebula Fields": "linear-gradient(#150f33,#0a081a)",
+    "Black Hole Bakery": "linear-gradient(#050505,#000000)",
+    "Gluon Dimension": "linear-gradient(#330026,#1a0013)",
+    "White Hole Realm": "linear-gradient(#333a40,#1a1e22)",
+    "Cosmic Void": "linear-gradient(#020205,#01010a)"
 };
 
 let skills = { clickBoost:0, passiveBoost:0, criticalChance:0 };
@@ -250,7 +250,7 @@ function renderAchievements(){
     let area = document.getElementById("achievements");
     area.innerHTML="";
     achievements.forEach(a=>{
-        area.innerHTML += `${a.unlocked ? "🏆" : "🔒"} ${a.name} - ${a.description}<br>`;
+        area.innerHTML += `${a.unlocked ? "🏆" : ""} ${a.name} - ${a.description}<br>`;
     });
 }
 
@@ -403,4 +403,4 @@ function playMusic(){
 }
 </script>
 </body>
-</html> 
+</html>
